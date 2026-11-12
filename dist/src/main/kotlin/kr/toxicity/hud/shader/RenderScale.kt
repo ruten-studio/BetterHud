@@ -21,12 +21,22 @@ class RenderScale(
 
         private val scaleOne = Scale(1.0, 1.0, false)
 
-        fun fromConfig(offset: PixelLocation, yamlObject: YamlObject) = RenderScale(
-            offset,
-            yamlObject["render-scale"]?.asObject()?.let {
-                Scale(it.getAsDouble("x", 1.0), it.getAsDouble("y", 1.0), it.getAsBoolean("static-scale", false))
-            } ?: scaleOne
-        )
+        /**
+         * The pivot is the element location. `render-scale.pivot-x` / `pivot-y` (ygg) override it,
+         * so that several elements scale around one point and keep their positions to each other.
+         */
+        fun fromConfig(offset: PixelLocation, yamlObject: YamlObject): RenderScale {
+            val section = yamlObject["render-scale"]?.asObject() ?: return RenderScale(offset, scaleOne)
+            val pivot = if (section["pivot-x"] != null || section["pivot-y"] != null) PixelLocation(
+                section.getAsInt("pivot-x", offset.x),
+                section.getAsInt("pivot-y", offset.y),
+                offset.opacity
+            ) else offset
+            return RenderScale(
+                pivot,
+                Scale(section.getAsDouble("x", 1.0), section.getAsDouble("y", 1.0), section.getAsBoolean("static-scale", false))
+            )
+        }
     }
 
     operator fun plus(other: PixelLocation) = RenderScale(relativeOffset + other, scale)

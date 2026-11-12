@@ -1,6 +1,6 @@
 # ユグドラシルの直し（ruten-studio/BetterHud）
 
-[toxicity188/BetterHud](https://github.com/toxicity188/BetterHud) の master `8f4b11dc`（CI の 449 回目、`BetterHud-bukkit-2.2.0-SNAPSHOT-449`）に、Minecraft サーバー「ユグドラシル」で使う直しを足したもの。直しはブランチ `ygg/shared-glyphs` にある。どちらの設定も入れなければ、元の BetterHud と同じに動く（作られる `build.zip` が元の jar と一致することを確かめた）。
+[toxicity188/BetterHud](https://github.com/toxicity188/BetterHud) の master `8f4b11dc`（CI の 449 回目、`BetterHud-bukkit-2.2.0-SNAPSHOT-449`）に、Minecraft サーバー「ユグドラシル」で使う直しを足したもの。直しはブランチ `ygg/shared-glyphs` にある。足した設定を使わなければ、元の BetterHud と同じに動く（作られる `build.zip` が元の jar と一致することを確かめた）。
 
 ## 足した設定（`plugins/BetterHud/config.yml`）
 
@@ -8,6 +8,18 @@
 |---|---|---|
 | `text-antialiasing` | `false` | TTF の字を、ふちのなめらかな画像で作る。切り詰める幅は白黒の字と同じなので、字の間隔は変わらない |
 | `share-text-glyphs` | `false` | 字の画像を文字の要素どうしで共有する（下の説明）。`text.vsh` のテンプレートに `#CreateTextElement` と共有の字の読み取りが要る |
+
+## 拡大の中心（`render-scale` の `pivot-x` / `pivot-y`）
+
+レイアウトの `render-scale` に `pivot-x` / `pivot-y` を書くと、その点を中心に拡大する（`dist/.../shader/RenderScale.kt`）。書かなければ元のとおり要素の位置が中心。いくつもの要素に同じ中心を書くと、要素どうしの位置の関係を保ったまま、まとめて大きさを変えられる。ユグドラシルでは、プレイヤーが HUD の要素ごとに大きさを変えるのに使う（plugin-yggcore の `hud/gen_ygg_hud.py`）。
+
+```yaml
+render-scale:
+  x: 1.2
+  y: 1.2
+  pivot-x: 640   # 拡大の中心（要素の位置と同じ座標）。片方だけなら、もう片方は要素の位置
+  pivot-y: 664
+```
 
 ## 字の共有（`share-text-glyphs`）
 
@@ -46,7 +58,7 @@ e2e での結果: 文字のフォントの定義が 368 個から 34 個、字�
 GRADLE_USER_HOME=/d/YggDrasill/.gradle-home ./gradlew :bootstrap:bukkit:shadowJar -PlegacyNmsJar=D:/YggDrasill/.gradle-home/legacy-nms-449.jar
 ```
 
-`-PlegacyNmsJar` を渡さなければ、元のとおりすべてをソースから組み立てる。出力は `build/libs/BetterHud-bukkit-2.2.0.jar`。node-a には `BetterHud-bukkit-2.2.0-ygg1.jar` の名前で入れた（2026-11-12）。
+`-PlegacyNmsJar` を渡さなければ、元のとおりすべてをソースから組み立てる。出力は `build/libs/BetterHud-bukkit-2.2.0.jar`。node-a には `BetterHud-bukkit-2.2.0-ygg1.jar` の名前で入れた（2026-11-12）。拡大の中心を足したものは `BetterHud-bukkit-2.2.0-ygg2.jar` として入れる予定。
 
 ## BetterHud を更新するとき
 
