@@ -9,6 +9,7 @@ import kr.toxicity.hud.layout.BackgroundLayout
 import kr.toxicity.hud.layout.TextLayout
 import kr.toxicity.hud.location.GuiLocation
 import kr.toxicity.hud.location.PixelLocation
+import kr.toxicity.hud.manager.ConfigManagerImpl
 import kr.toxicity.hud.manager.EncodeManager
 import kr.toxicity.hud.pack.PackGenerator
 import kr.toxicity.hud.renderer.TextRenderer
@@ -16,6 +17,7 @@ import kr.toxicity.hud.resource.GlobalResource
 import kr.toxicity.hud.shader.HudShader
 import kr.toxicity.hud.text.BackgroundKey
 import kr.toxicity.hud.text.HudTextData
+import kr.toxicity.hud.text.SharedTextGlyphs
 import kr.toxicity.hud.util.*
 import net.kyori.adventure.text.Component
 import kotlin.math.roundToInt
@@ -50,6 +52,13 @@ class HudTextParser(
         val keys = (0..<text.line).map { lineIndex ->
             val yAxis = (loc.y + lineIndex * text.lineWidth).coerceAtLeast(-HUD_ADD_HEIGHT).coerceAtMost(HUD_ADD_HEIGHT)
             text(text.identifier(shader, yAxis)) {
+                if (ConfigManagerImpl.shareTextGlyphs && text.background.source == null && scaledImageMap.isEmpty()) {
+                    return@text BackgroundKey(
+                        SharedTextGlyphs.font(resource, text),
+                        null,
+                        SharedTextGlyphs.element(shader, yAxis)
+                    )
+                }
                 val array = text.startJson()
                 text.source.array.forEach {
                     createAscent(shader, yAxis - it.ascent(text.scale)) { y ->

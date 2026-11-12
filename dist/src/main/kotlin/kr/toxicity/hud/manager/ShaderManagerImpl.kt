@@ -8,6 +8,7 @@ import kr.toxicity.hud.pack.PackGenerator
 import kr.toxicity.hud.pack.PackOverlay
 import kr.toxicity.hud.resource.GlobalResource
 import kr.toxicity.hud.shader.HudShader
+import kr.toxicity.hud.text.SharedTextGlyphs
 import kr.toxicity.hud.util.*
 import net.kyori.adventure.bossbar.BossBar
 import java.awt.image.BufferedImage
@@ -33,6 +34,9 @@ object ShaderManagerImpl : BetterHudManager, ShaderManager {
         },
         "CreateLayout" to {
             compiledLayout
+        },
+        "CreateTextElement" to {
+            SharedTextGlyphs.lines
         },
     )
 
@@ -136,6 +140,7 @@ object ShaderManagerImpl : BetterHudManager, ShaderManager {
         compiledLayout = hudShaders.entries.foldIndexed(arrayListOf()) { index, arr, entry ->
             val shader = entry.key
             val id = index + 1
+            if (id >= SharedTextGlyphs.SHARED_ID) throw RuntimeException("Too many hud shaders: $id")
             arr.add("case ${id}:")
             if (shader.property > 0) arr.add("    property = ${shader.property};")
             if (shader.opacity < 1.0) arr.add("    opacity = ${shader.opacity.toFloat()};")
@@ -157,6 +162,7 @@ object ShaderManagerImpl : BetterHudManager, ShaderManager {
             }
             arr
         }
+        SharedTextGlyphs.compile(resource)
         for (overlay in PackOverlay.entries) {
             loadShaders(overlay).forEach { (key, byte) ->
                 val path = resource.core + key
@@ -167,6 +173,7 @@ object ShaderManagerImpl : BetterHudManager, ShaderManager {
         }
         compiledLayout = arrayListOf()
         hudShaders.clear()
+        SharedTextGlyphs.clear()
     }
 
     private fun loadShaders(overlay: PackOverlay): List<Pair<String, ByteArray>> {

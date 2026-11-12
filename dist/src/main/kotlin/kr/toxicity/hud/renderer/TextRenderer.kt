@@ -10,6 +10,7 @@ import kr.toxicity.hud.layout.enums.LayoutAlign
 import kr.toxicity.hud.manager.PlaceholderManagerImpl
 import kr.toxicity.hud.manager.PlayerManagerImpl
 import kr.toxicity.hud.text.HudTextData
+import kr.toxicity.hud.text.SharedTextGlyphs
 import kr.toxicity.hud.util.*
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextReplacementConfig
@@ -44,6 +45,8 @@ class TextRenderer(
     }
 
     private val parsedPatter = PlaceholderManagerImpl.parse(pattern, this)
+
+    private val shiftKey = if (data.font.any { it.element > 0 }) SharedTextGlyphs.shiftKey() else null
 
     private val widthViewer = ValueViewer<Pair<Style, Int>, Int>()
         .addFunction(
@@ -112,6 +115,9 @@ class TextRenderer(
                     finalComp = build + minus.toSpaceComponent() + finalComp + (-minus - finalComp.width).toSpaceComponent()
                 } ?: run {
                     if (max < finalComp.width) max = finalComp.width
+                }
+                if (backgroundKey.element > 0 && shiftKey != null) {
+                    finalComp = SharedTextGlyphs.wrap(shiftKey, backgroundKey.element, finalComp)
                 }
                 widthComp = widthComp plusWithAlign finalComp
             }
