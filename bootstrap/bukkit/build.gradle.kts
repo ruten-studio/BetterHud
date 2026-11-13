@@ -16,11 +16,18 @@ dependencies {
     shade(project(":scheduler:standard")) { isTransitive = false }
     shade(project(":scheduler:paper")) { isTransitive = false }
 
-    shade(project(":nms:v1_21_R3", configuration = "reobf")) { isTransitive = false }
-    shade(project(":nms:v1_21_R4", configuration = "reobf")) { isTransitive = false }
-    shade(project(":nms:v1_21_R5", configuration = "reobf")) { isTransitive = false }
-    shade(project(":nms:v1_21_R6", configuration = "reobf")) { isTransitive = false }
-    shade(project(":nms:v1_21_R7", configuration = "reobf")) { isTransitive = false }
+    // -PlegacyNmsJar=<jar> takes the 1.21 NMS classes from a released jar of the same commit
+    // instead of building them (their remapper can not run on a local Java 25)
+    val legacyNmsJar = findProperty("legacyNmsJar")?.toString()
+    if (legacyNmsJar != null) {
+        shade(files(legacyNmsJar))
+    } else {
+        shade(project(":nms:v1_21_R3", configuration = "reobf")) { isTransitive = false }
+        shade(project(":nms:v1_21_R4", configuration = "reobf")) { isTransitive = false }
+        shade(project(":nms:v1_21_R5", configuration = "reobf")) { isTransitive = false }
+        shade(project(":nms:v1_21_R6", configuration = "reobf")) { isTransitive = false }
+        shade(project(":nms:v1_21_R7", configuration = "reobf")) { isTransitive = false }
+    }
     shade(project(":nms:v26_R1")) { isTransitive = false }
     shade(project(":nms:v26_R2")) { isTransitive = false }
 

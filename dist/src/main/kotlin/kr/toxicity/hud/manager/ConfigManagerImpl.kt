@@ -101,6 +101,14 @@ object ConfigManagerImpl : BetterHudManager, ConfigManager {
     var mergeWithExternalResources = false
         private set
 
+    /** Draws TTF glyphs with antialiasing (the crop width is the same as the binary glyph). */
+    var textAntialiasing = false
+        private set
+
+    /** Shares glyph images between text layouts. text.vsh must contain the #CreateTextElement tag (see SharedTextGlyphs). */
+    var shareTextGlyphs = false
+        private set
+
     override fun start() {
         preReload()
     }
@@ -210,6 +218,8 @@ object ConfigManagerImpl : BetterHudManager, ConfigManager {
                 }.getOrNull()
             }
             removeDefaultHotbar = yaml.getAsBoolean("remove-default-hotbar", false)
+            textAntialiasing = yaml.getAsBoolean("text-antialiasing", false)
+            shareTextGlyphs = yaml.getAsBoolean("share-text-glyphs", false)
             disableLegacyOffset = yaml.getAsBoolean("disable-legacy-offset", false)
             mergeWithExternalResources = yaml.getAsBoolean("merge-with-external-resources", true)
         }.handleFailure {

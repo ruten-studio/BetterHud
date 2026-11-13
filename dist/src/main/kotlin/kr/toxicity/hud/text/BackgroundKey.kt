@@ -6,5 +6,7 @@ import net.kyori.adventure.key.Key
 //TODO replace it to proper background in the future.
 class BackgroundKey(
     val key: Key,
-    val background: BackgroundLayout?
+    val background: BackgroundLayout?,
+    /** Element id of a shared text font (see SharedTextGlyphs), or 0. */
+    val element: Int = 0
 )

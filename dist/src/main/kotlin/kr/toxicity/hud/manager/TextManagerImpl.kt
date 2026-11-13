@@ -20,6 +20,7 @@ import kr.toxicity.hud.text.TextScale
 import kr.toxicity.hud.util.*
 import java.awt.AlphaComposite
 import java.awt.Font
+import java.awt.RenderingHints
 import java.awt.font.FontRenderContext
 import java.awt.image.BufferedImage
 import java.io.File
@@ -426,19 +427,34 @@ object TextManagerImpl : BetterHudManager, TextManager {
 
     private class JavaBitmapProvider(private val targetFont: Font): FontBitmapProvider {
         override val height: Int = (targetFont.size.toDouble() * 1.4).roundToInt()
+        private fun draw(char: Int, smooth: Boolean) = BufferedImage(
+            targetFont.size,
+            height,
+            BufferedImage.TYPE_INT_ARGB
+        ).apply {
+            createGraphics().run {
+                if (smooth) {
+                    setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+                    setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+                    setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+                }
+                fill(targetFont.createGlyphVector(FRC, char.parseChar()).getOutline(0F, targetFont.size.toFloat()))
+                dispose()
+            }
+        }
         override fun provide(filter: (Int) -> Boolean, block: (CharImage) -> Unit) {
             unicodeRange.filter(filter).forEachAsync { char ->
-                if (targetFont.canDisplay(char)) BufferedImage(
-                    targetFont.size,
-                    height,
-                    BufferedImage.TYPE_INT_ARGB
-                ).apply {
-                    createGraphics().run {
-                        fill(targetFont.createGlyphVector(FRC, char.parseChar()).getOutline(0F, targetFont.size.toFloat()))
-                        dispose()
-                    }
-                }.removeEmptyWidth()?.let {
-                    block(CharImage(char, it.image))
+                if (targetFont.canDisplay(char)) draw(char, false).removeEmptyWidth()?.let {
+                    block(CharImage(char, if (ConfigManagerImpl.textAntialiasing) {
+                        // Keep the crop of the binary glyph so that the width (and the spacing) does not change.
+                        val smooth = draw(char, true)
+                        BufferedImage(it.image.width, height, BufferedImage.TYPE_INT_ARGB).apply {
+                            createGraphics().run {
+                                drawImage(smooth.getSubimage(it.xOffset, 0, it.image.width, height), 0, 0, null)
+                                dispose()
+                            }
+                        }
+                    } else it.image))
                 }
             }
         }
