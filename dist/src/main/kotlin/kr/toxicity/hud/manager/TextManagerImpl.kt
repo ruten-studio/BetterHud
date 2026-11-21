@@ -427,6 +427,19 @@ object TextManagerImpl : BetterHudManager, TextManager {
 
     private class JavaBitmapProvider(private val targetFont: Font): FontBitmapProvider {
         override val height: Int = (targetFont.size.toDouble() * 1.4).roundToInt()
+
+        /**
+         * Minecraft measures a bitmap glyph up to its last column with any alpha, while BetterHud uses the crop width of
+         * the binary glyph. The antialiased glyph can leave that column fully transparent (e.g. U+30E4 at size 40), so the
+         * client advance becomes 1 pixel shorter than the width BetterHud expects, and every element after it on the line
+         * (and, because the line is centered, the whole HUD) moves. Put an invisible pixel (alpha 1) in that column.
+         */
+        private fun keepLastColumn(smooth: BufferedImage, binary: BufferedImage) {
+            val x = smooth.width - 1
+            if ((0..<smooth.height).any { y -> smooth.getRGB(x, y) ushr 24 != 0 }) return
+            val y = (0..<minOf(binary.height, smooth.height)).firstOrNull { y -> binary.getRGB(x, y) ushr 24 != 0 } ?: (smooth.height / 2)
+            smooth.setRGB(x, y, 0x01FFFFFF)
+        }
         private fun draw(char: Int, smooth: Boolean) = BufferedImage(
             targetFont.size,
             height,
@@ -453,6 +466,7 @@ object TextManagerImpl : BetterHudManager, TextManager {
                                 drawImage(smooth.getSubimage(it.xOffset, 0, it.image.width, height), 0, 0, null)
                                 dispose()
                             }
+                            keepLastColumn(this, it.image)
                         }
                     } else it.image))
                 }
